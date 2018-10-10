@@ -3,10 +3,12 @@ title: "Cousera Reproducible research week 2"
 author: "Edwin Wanner"
 date: "9 oktober 2018"
 output: html_document
+html_document:
+keep_md: true
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(dev = c('png'), fig.path = 'figure/',echo = TRUE)
 ```
 
 ## Reproducible research - Project 1
