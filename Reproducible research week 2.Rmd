@@ -1,0 +1,141 @@
+---
+title: "Cousera Reproducible research week 2"
+author: "Edwin Wanner"
+date: "9 oktober 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Reproducible research - Project 1
+This R Markdown document is the report for the Coursera course Reproducible research - week 2.
+A simple set of data analysis tasks will be performed.
+
+First, reading in the data:
+
+```{r data}
+steps <- read.csv("activity.csv")
+```
+
+Next, we will transform the date column to be of the type 'date'.
+
+```{r transform}
+steps$date <- as.Date(steps$date)
+```
+
+## Mean total number of steps per day
+In the following tasks, we will ignore the NA.
+
+Calculating the total number of steps taken per day:
+
+```{r steps per day}
+stepsPerDay <- aggregate(steps ~ date,data = steps, FUN = sum, na.action = na.omit )
+stepsPerDay
+```
+
+The table shows that that there are missing dates. These are left out on purpose.
+
+To gain more insight into the data, we will create a histogram displaying the total number of steps for each day.
+
+```{r histogram steps}
+hist(stepsPerDay$steps,
+     main = "Number of steps per day",
+     xlab = "Number of steps", 
+     breaks = 10, 
+     col = "grey",
+     xlim = c(0,25000))
+
+```
+
+Now that we know the total number of steps per day, we are now interested in the mean and median number of steps per day.
+
+```{r mean median steps}
+stepsMean   <- aggregate(steps ~ date,data = steps, FUN = mean, na.action = na.omit )
+stepsMedian <- aggregate(steps ~ date,data = steps, FUN = median, na.action = na.omit )
+merged <- merge(stepsMean, stepsMedian, by = "date")
+names(merged) <- c("date","mean","median")
+merged
+
+```
+
+The table clearly shows that the mean is known everywhere, though the median is zero.
+
+##Average daily activity pattern
+We will dive deeper into the number of steps, by looking at the 5-minute intervals.
+
+```{r 5-minute}
+stepsPerInterval <- aggregate(steps~interval, data = steps, FUN = mean, na.action = na.omit)
+with(stepsPerInterval, plot(interval, steps, type = "l", col = "red", xlab = "5-minute interval", main = "Average number of steps per 5-minute interval"))
+
+maxInterval <- stepsPerInterval[which.max(stepsPerInterval$steps),1]
+abline(v= maxInterval, lwd = 3, lty = 2)
+```
+
+The interval that has, on average, the highest number of steps is `r maxInterval`.
+
+## Imputing missing values
+We know that there are missing values in the data set.
+
+```{r NA}
+missing <- sum(is.na(steps$steps))
+```
+The total number of NA values in the data set is `r missing`.
+
+In order to fill in the missing values, we will use the average 5-minute intervals to replace the missing values.
+
+```{r NA replace}
+idNA <- which(is.na(steps$steps))
+stepsFilled <- steps
+for( i in 1:length(idNA)) {
+        stepsFilled[idNA[i],1] <- stepsPerInterval[which(stepsPerInterval$interval == steps[idNA[i],3]),2]        
+}
+```
+
+Using the dataset without the missing values, the histogram of the total number of steps will look as follows:
+
+```{r histogram missing}
+stepsPerDayFilled <- aggregate(steps ~ date,data = stepsFilled, FUN = sum, na.action = na.omit )
+hist(stepsPerDayFilled$steps,
+     main = "Number of steps per day",
+     xlab = "Number of steps", 
+     breaks = 10, 
+     col = "grey",
+     xlim = c(0,25000))
+```
+
+The mean and median are then as follows:
+
+```{r mean median missing}
+stepsFilledMean   <- aggregate(steps ~ date,data = stepsFilled, FUN = mean, na.action = na.omit )
+stepsFilledMedian <- aggregate(steps ~ date,data = stepsFilled, FUN = median, na.action = na.omit )
+mergedFilled <- merge(stepsFilledMean, stepsFilledMedian, by = "date")
+names(mergedFilled) <- c("date","mean","median")
+mergedFilled
+```
+
+We can clearly see some differences in the median, which is not always zero. Furthermore, the dates that had a 'NA' value, are now shown, which were ignored in the previous table. The impact of of filling in the missing values is that all days are now shown and not only a selection. The pattern in the histogram is similar, but the frequency is higher.
+
+## differences in activity pattern between weekdays and weekends
+There might be a difference in the activity pattern between weekdays and the weekends. In order to investigate this, a new variable will be created that displays whether the given date is a weekday or a weekend. 
+
+```{r weekend}
+Sys.setlocale("LC_ALL","English")
+stepsFilled$Weekday <- weekdays(stepsFilled$date)
+stepsFilled$daytype <- as.factor(ifelse(stepsFilled$Weekday %in% c("Saturday","Sunday"), "Weekend","Weekday"))
+```
+
+The panel plot below shows a time series plot of the 5-minute interval average number of steps on weekdays and weekends.
+
+```{r histogram weekend}
+library(ggplot2)
+par(mfrow = c(1,2))
+stepsIntervalDaytype <- aggregate(steps~interval+daytype, data = stepsFilled, FUN = mean, na.action = na.omit)
+ggplot(stepsIntervalDaytype, aes(interval, steps,daytype)) +
+        geom_line() +
+        facet_wrap(~daytype, ncol =1) +
+        labs(y = "number of steps", x = "5-minute interval")
+```
+
+The plot for the weekday shows a high peek at the start of the day. In the weekends the average number of steps has more peeks.
