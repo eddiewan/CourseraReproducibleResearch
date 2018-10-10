@@ -2,10 +2,13 @@
 
 The files in the repository are as follows:
 
-- Reproducible research week 2.Rmd
-This is the markup document
+- PA1_template.Rmd
+This is the markup document (without figures)
 
-- Reproducible research week 2.html
+- PA1_template.md
+This is the markup document including figures
+
+- PA1_template.html
 This is the hmtl code of the markup document
 
 - activity.csv
@@ -16,3 +19,5 @@ These are the scripts to perform the analysis on its own (with limited documenta
 
 - repdata%2Fdata%2Factivity.zip
 Zip file of the dataset
+
+There is a separate folder, 'figure', containing all figures of the markup document.
